@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, CheckCircle2, FileJson, RefreshCw, Repeat, Copy, Check, FileCode2, FileArchive, Trash2 } from 'lucide-react';
+import { Download, CheckCircle2, FileJson, RefreshCw, Copy, Check, FileCode2, FileArchive, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
