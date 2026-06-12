@@ -476,7 +476,8 @@ describe('Calculation variables', () => {
     // variable 'a' (references deleted p1) removed, 'b' (references p99) stays
     expect(Object.keys(p2After?.data?.variables ?? {})).not.toContain('a');
     expect(Object.keys(p2After?.data?.variables ?? {})).toContain('b');
-    expect(p2After?.data?.expression).toBe('');
+    // expression 'a + b' → 'b' after removing variable 'a'
+    expect(p2After?.data?.expression).toBe('b');
   });
 
   it('removes the entire CALCULATION parameter when all its variables are deleted', () => {
@@ -485,7 +486,7 @@ describe('Calculation variables', () => {
       type: 'CALCULATION',
       data: {
         variables: { a: { parameterId: 'p1', taskId: 't1', label: 'A' } },
-        expression: 'A*2',
+        expression: 'a*2',
       },
     });
     const task = makeTask('t1', [p1, calc]);
@@ -493,5 +494,76 @@ describe('Calculation variables', () => {
     const { modifiedConfig } = run(config, [selectedParam(p1)]);
     const params = modifiedConfig[0].stageRequests[0].taskRequests[0].parameterRequests;
     expect(params.find((p: any) => p.id === 'calc')).toBeUndefined();
+  });
+
+  it('removes operator along with variable from expression (a+b → delete b → a)', () => {
+    const p1 = makeParam('p1');
+    const p2 = makeParam('p2');
+    const calc = makeParam('calc', {
+      type: 'CALCULATION',
+      data: {
+        variables: {
+          a: { parameterId: 'p1', taskId: 't1', label: 'A' },
+          b: { parameterId: 'p2', taskId: 't1', label: 'B' },
+        },
+        expression: 'a+b',
+      },
+    });
+    const task = makeTask('t1', [p1, p2, calc]);
+    const config = makeConfig([makeStage('s1', [task])]);
+    const { modifiedConfig } = run(config, [selectedParam(p2)]);
+    const calcAfter = modifiedConfig[0].stageRequests[0].taskRequests[0].parameterRequests.find(
+      (p: any) => p.id === 'calc',
+    );
+    expect(calcAfter).toBeDefined();
+    expect(calcAfter?.data?.expression).toBe('a');
+    expect(Object.keys(calcAfter?.data?.variables ?? {})).not.toContain('b');
+    expect(Object.keys(calcAfter?.data?.variables ?? {})).toContain('a');
+  });
+
+  it('removes operator when variable is at start of expression (b+a → delete b → a)', () => {
+    const p1 = makeParam('p1');
+    const p2 = makeParam('p2');
+    const calc = makeParam('calc', {
+      type: 'CALCULATION',
+      data: {
+        variables: {
+          a: { parameterId: 'p1', taskId: 't1', label: 'A' },
+          b: { parameterId: 'p2', taskId: 't1', label: 'B' },
+        },
+        expression: 'b+a',
+      },
+    });
+    const task = makeTask('t1', [p1, p2, calc]);
+    const config = makeConfig([makeStage('s1', [task])]);
+    const { modifiedConfig } = run(config, [selectedParam(p2)]);
+    const calcAfter = modifiedConfig[0].stageRequests[0].taskRequests[0].parameterRequests.find(
+      (p: any) => p.id === 'calc',
+    );
+    expect(calcAfter?.data?.expression).toBe('a');
+  });
+
+  it('removes variable from middle of expression (a+b+c → delete b → a+c)', () => {
+    const p1 = makeParam('p1');
+    const p2 = makeParam('p2');
+    const p3 = makeParam('p3');
+    const calc = makeParam('calc', {
+      type: 'CALCULATION',
+      data: {
+        variables: {
+          a: { parameterId: 'p1', taskId: 't1', label: 'A' },
+          b: { parameterId: 'p2', taskId: 't1', label: 'B' },
+          c: { parameterId: 'p3', taskId: 't1', label: 'C' },
+        },
+        expression: 'a+b+c',
+      },
+    });
+    const task = makeTask('t1', [p1, p2, p3, calc]);
+    const config = makeConfig([makeStage('s1', [task])]);
+    const { modifiedConfig } = run(config, [selectedParam(p2)]);
+    const calcAfter = modifiedConfig[0].stageRequests[0].taskRequests[0].parameterRequests.find(
+      (p: any) => p.id === 'calc',
+    );
+    expect(calcAfter?.data?.expression).toBe('a+c');
   });
 });

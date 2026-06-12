@@ -307,6 +307,9 @@ function cleanParameter(
       for (const key of Object.keys(data.variables)) {
         const v = data.variables[key];
         if (del.parameters.has(String(v?.parameterId)) || del.tasks.has(String(v?.taskId))) {
+          if (data.expression) {
+            data.expression = removeVarFromExpression(data.expression, key);
+          }
           delete data.variables[key];
           removed += 1;
         }
@@ -314,13 +317,10 @@ function cleanParameter(
       if (removed > 0) {
         report.counts.calculations += removed;
         report.counts.references += removed;
-        // Clear the expression — it likely references the removed variable name(s)
-        // and would be invalid without them.
-        data.expression = '';
         report.cleaned.push({
           kind: 'calculation',
           location: loc,
-          detail: `Removed ${removed} calculation variable(s) and cleared expression (references deleted parameter)`,
+          detail: `Removed ${removed} calculation variable(s) and updated expression`,
         });
       }
     }
@@ -517,4 +517,29 @@ function hasAnyParameterLink(auto: any): boolean {
   walk(auto.actionDetails);
   walk(auto.triggerDetails);
   return found;
+}
+
+/**
+ * Remove a variable name and its adjacent operator from a calculation expression.
+ * e.g. removeVarFromExpression("a+b", "b") → "a"
+ *      removeVarFromExpression("b+a", "b") → "a"
+ *      removeVarFromExpression("a+b+c", "b") → "a+c"
+ * Falls back to clearing the expression if it can't be cleaned safely.
+ */
+function removeVarFromExpression(expr: string, varName: string): string {
+  if (!expr) return expr;
+  const v = varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Remove: preceding operator + varName  e.g. "+b"
+  let result = expr.replace(new RegExp(`\\s*[-+*/]\\s*\\b${v}\\b`, 'g'), '').trim();
+  if (result !== expr.trim()) {
+    return /^[-+*/\s]*$/.test(result) ? '' : result;
+  }
+  // Remove: varName + following operator  e.g. "b+"
+  result = expr.replace(new RegExp(`\\b${v}\\b\\s*[-+*/]\\s*`, 'g'), '').trim();
+  if (result !== expr.trim()) {
+    return /^[-+*/\s]*$/.test(result) ? '' : result;
+  }
+  // Variable present but can't cleanly remove with operator → clear expression
+  if (new RegExp(`\\b${v}\\b`).test(expr)) return '';
+  return expr;
 }
