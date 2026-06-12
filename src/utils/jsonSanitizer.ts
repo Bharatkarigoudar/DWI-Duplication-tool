@@ -69,7 +69,7 @@ export function serializeConfig(config: any, pretty = false): string {
 
 /**
  * Safe JSON parse that preserves large integer IDs
- * Use this instead of JSON.parse() for MES config files
+ * Use this instead of JSON.parse() for config files
  * 
  * @param jsonString - Raw JSON string to parse
  * @returns Parsed JavaScript object with IDs as strings

@@ -47,7 +47,7 @@ function App() {
               ✕
             </div>
             <div className="leading-tight">
-              <div className="text-lg font-bold">MES Deletion Tool</div>
+              <div className="text-lg font-bold">Deletion Tool</div>
               <div className="hidden text-xs text-muted-foreground sm:block">
                 Remove stages, tasks &amp; parameters · clean all references · import-ready output
               </div>

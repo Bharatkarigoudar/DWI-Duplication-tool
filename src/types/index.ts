@@ -1,4 +1,4 @@
-// ==================== MES Configuration Types ====================
+// ==================== Configuration Types ====================
 
 export interface ChecklistConfig {
   id: string;

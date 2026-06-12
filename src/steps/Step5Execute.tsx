@@ -207,7 +207,7 @@ export default function Step5Execute({
                 <FileArchive className="h-4 w-4" />
                 <AlertTitle>How to import</AlertTitle>
                 <AlertDescription className="text-sm">
-                  Upload the <strong>.zip</strong> to the MES platform. The plain <strong>JSON (minified)</strong> also imports where a raw file is accepted. The <strong>Formatted</strong> download is for human review only.
+                  Upload the <strong>.zip</strong> to the platform. The plain <strong>JSON (minified)</strong> also imports where a raw file is accepted. The <strong>Formatted</strong> download is for human review only.
                 </AlertDescription>
               </Alert>
 

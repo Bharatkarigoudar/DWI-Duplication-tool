@@ -147,7 +147,7 @@ export function getTimeAgo(timestamp: number): string {
  * Storage helpers for recent files
  */
 export const recentFilesStorage = {
-  key: 'mes-duplication-tool-recent-files',
+  key: 'deletion-tool-recent-files',
   maxFiles: 3,
 
   get(): RecentFile[] {

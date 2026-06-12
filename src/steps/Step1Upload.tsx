@@ -126,10 +126,10 @@ export default function Step1Upload({ onJsonLoaded }: Step1UploadProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Trash2 className="h-5 w-5 text-destructive" />
-            MES Deletion Tool
+            Deletion Tool
           </CardTitle>
           <CardDescription>
-            Upload your MES configuration. You'll then select entities to delete — all references
+            Upload your configuration. You'll then select entities to delete — all references
             (automations, filters, rules, calculations, task prerequisites) are automatically
             cleaned up before removal.
           </CardDescription>
@@ -147,7 +147,7 @@ export default function Step1Upload({ onJsonLoaded }: Step1UploadProps) {
             <CardHeader>
               <CardTitle>Upload Configuration (JSON or ZIP)</CardTitle>
               <CardDescription>
-                Drop a <strong>.json</strong> file or a <strong>.zip</strong> export from the MES platform.
+                Drop a <strong>.json</strong> file or a <strong>.zip</strong> export.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -187,7 +187,7 @@ export default function Step1Upload({ onJsonLoaded }: Step1UploadProps) {
           <Card>
             <CardHeader>
               <CardTitle>Paste JSON Configuration</CardTitle>
-              <CardDescription>Paste your MES configuration JSON directly</CardDescription>
+              <CardDescription>Paste your configuration JSON directly</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Textarea

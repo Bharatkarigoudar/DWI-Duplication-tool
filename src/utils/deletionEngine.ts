@@ -8,7 +8,7 @@ import { deepClone } from './helpers';
  * reference to them from the rest of the configuration BEFORE removing them,
  * so the resulting JSON stays internally consistent and importable.
  *
- * Reference sites handled (discovered from real MES exports):
+ * Reference sites handled (discovered from real exports):
  *  - Automations: actionDetails/triggerDetails  -> configuration[].parameterId,
  *    referencedParameterId (unlinked = set to null; optionally drop emptied autos)
  *  - Resource filters: data.propertyFilters.fields[].referencedParameterId  (field removed)

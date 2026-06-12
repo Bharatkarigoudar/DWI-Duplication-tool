@@ -1,5 +1,5 @@
 /**
- * Generate a new unique ID in the format matching original MES IDs
+ * Generate a new unique ID in the format matching original IDs
  * Format: 18-19 digit numeric string (timestamp + random)
  */
 export function generateNewId(): string {
