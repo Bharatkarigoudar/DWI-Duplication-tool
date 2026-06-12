@@ -475,5 +475,7 @@ describe('Calculation variables', () => {
     );
     expect(Object.keys(p2After?.data?.variables ?? {})).not.toContain('a');
     expect(Object.keys(p2After?.data?.variables ?? {})).toContain('b');
+    // expression must be cleared because it likely referenced the removed variable
+    expect(p2After?.data?.expression).toBe('');
   });
 });

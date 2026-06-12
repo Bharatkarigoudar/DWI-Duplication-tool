@@ -314,10 +314,13 @@ function cleanParameter(
       if (removed > 0) {
         report.counts.calculations += removed;
         report.counts.references += removed;
+        // Clear the expression — it likely references the removed variable name(s)
+        // and would be invalid without them.
+        data.expression = '';
         report.cleaned.push({
           kind: 'calculation',
           location: loc,
-          detail: `Removed ${removed} calculation variable(s)`,
+          detail: `Removed ${removed} calculation variable(s) and cleared expression (references deleted parameter)`,
         });
       }
     }
