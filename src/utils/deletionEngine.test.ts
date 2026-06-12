@@ -473,9 +473,25 @@ describe('Calculation variables', () => {
     const p2After = modifiedConfig[0].stageRequests[0].taskRequests[0].parameterRequests.find(
       (p: any) => p.id === 'p2',
     );
+    // variable 'a' (references deleted p1) removed, 'b' (references p99) stays
     expect(Object.keys(p2After?.data?.variables ?? {})).not.toContain('a');
     expect(Object.keys(p2After?.data?.variables ?? {})).toContain('b');
-    // expression must be cleared because it likely referenced the removed variable
     expect(p2After?.data?.expression).toBe('');
+  });
+
+  it('removes the entire CALCULATION parameter when all its variables are deleted', () => {
+    const p1 = makeParam('p1');
+    const calc = makeParam('calc', {
+      type: 'CALCULATION',
+      data: {
+        variables: { a: { parameterId: 'p1', taskId: 't1', label: 'A' } },
+        expression: 'A*2',
+      },
+    });
+    const task = makeTask('t1', [p1, calc]);
+    const config = makeConfig([makeStage('s1', [task])]);
+    const { modifiedConfig } = run(config, [selectedParam(p1)]);
+    const params = modifiedConfig[0].stageRequests[0].taskRequests[0].parameterRequests;
+    expect(params.find((p: any) => p.id === 'calc')).toBeUndefined();
   });
 });

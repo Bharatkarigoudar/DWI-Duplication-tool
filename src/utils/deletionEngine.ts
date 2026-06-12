@@ -386,9 +386,27 @@ export function deleteEntities(
   // 1) Scrub references from everything that REMAINS.
   for (const checklist of modifiedConfig) {
     // checklist-level parameters
-    (checklist as any).parameterRequests?.forEach((p: Parameter) =>
-      cleanParameter(p, `Checklist › ${paramLabel(p)}`, del, report),
-    );
+    const cl = checklist as any;
+    if (Array.isArray(cl.parameterRequests)) {
+      const emptyCalcIds = new Set<string>();
+      cl.parameterRequests.forEach((p: Parameter) => {
+        cleanParameter(p, `Checklist › ${paramLabel(p)}`, del, report);
+        const d = (p as any).data;
+        if (p.type === 'CALCULATION' && d?.variables && Object.keys(d.variables).length === 0) {
+          emptyCalcIds.add(String(p.id));
+          report.cleaned.push({
+            kind: 'calculation',
+            location: `Checklist › ${paramLabel(p)}`,
+            detail: `Removed calculation parameter "${paramLabel(p)}" — all variables were deleted`,
+          });
+        }
+      });
+      if (emptyCalcIds.size > 0) {
+        cl.parameterRequests = cl.parameterRequests.filter(
+          (p: Parameter) => !emptyCalcIds.has(String(p.id)),
+        );
+      }
+    }
 
     checklist.stageRequests?.forEach((stage) => {
       if (del.stages.has(String(stage.id))) return; // will be removed anyway
@@ -432,10 +450,27 @@ export function deleteEntities(
         }
 
         // Parameters on this task
-        task.parameterRequests?.forEach((p) => {
-          if (del.parameters.has(String(p.id))) return;
-          cleanParameter(p, `${taskLoc} › ${paramLabel(p)}`, del, report);
-        });
+        if (Array.isArray(task.parameterRequests)) {
+          const emptyCalcIds = new Set<string>();
+          task.parameterRequests.forEach((p) => {
+            if (del.parameters.has(String(p.id))) return;
+            cleanParameter(p, `${taskLoc} › ${paramLabel(p)}`, del, report);
+            const d = (p as any).data;
+            if (p.type === 'CALCULATION' && d?.variables && Object.keys(d.variables).length === 0) {
+              emptyCalcIds.add(String(p.id));
+              report.cleaned.push({
+                kind: 'calculation',
+                location: taskLoc,
+                detail: `Removed calculation parameter "${paramLabel(p)}" — all variables were deleted`,
+              });
+            }
+          });
+          if (emptyCalcIds.size > 0) {
+            task.parameterRequests = task.parameterRequests.filter(
+              (p) => !emptyCalcIds.has(String(p.id)),
+            );
+          }
+        }
       });
     });
 
