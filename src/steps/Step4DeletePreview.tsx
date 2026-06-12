@@ -24,7 +24,7 @@ export default function Step4DeletePreview({ originalConfig, modifiedConfig, rep
     ['Tasks', before.tasks, after.tasks],
     ['Parameters', before.parameters, after.parameters],
     ['Automations', before.automations, after.automations],
-    ['Rules', before.rules, after.rules],
+    ['Branching Rules', before.rules, after.rules],
   ];
 
   return (
@@ -72,7 +72,7 @@ export default function Step4DeletePreview({ originalConfig, modifiedConfig, rep
           <CardContent className="text-sm text-muted-foreground">
             {report.counts.automationsUnlinked} automation(s) unlinked
             {report.counts.automationsRemoved > 0 && `, ${report.counts.automationsRemoved} removed`}
-            , {report.counts.filters} filter condition(s), {report.counts.rules} rule reference(s),
+            , {report.counts.filters} filter condition(s), {report.counts.rulesRemoved} branching rule(s) removed,
             {' '}{report.counts.validations} validation(s), {report.counts.calculations} calculation
             variable(s), {report.counts.taskRefs} task prerequisite/executor reference(s) and{' '}
             {report.counts.autoInit} auto-initialize link(s) handled.

@@ -168,7 +168,6 @@ describe('Branching rules', () => {
     const task = makeTask('t1', [p1, p2]);
     const config = makeConfig([makeStage('s1', [task])]);
     expect(() => run(config, [selectedParam(p1)])).not.toThrow();
-    const p2After = makeConfig([makeStage('s1', [task])]); // verify rule survives
     expect(p2.rules).toHaveLength(1);
   });
 
