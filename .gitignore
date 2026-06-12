@@ -44,6 +44,9 @@ coverage
 Thumbs.db
 .DS_Store
 
+# Claude Code local settings
+.claude/
+
 # Temporary files
 *.tmp
 *.temp

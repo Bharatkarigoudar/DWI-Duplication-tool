@@ -25,7 +25,7 @@ export interface DeletionOptions {
 }
 
 export const DEFAULT_DELETION_OPTIONS: DeletionOptions = {
-  removeEmptiedAutomations: false,
+  removeEmptiedAutomations: true,
 };
 
 export interface DeletionReportItem {
@@ -55,7 +55,7 @@ export interface DeletionReport {
     automationsRemoved: number;
     filters: number;
     validations: number;
-    rules: number;
+    rulesRemoved: number;
     autoInit: number;
     calculations: number;
     mentions: number;
@@ -245,31 +245,29 @@ function cleanParameter(
   del: { parameters: Set<string>; tasks: Set<string>; stages: Set<string> },
   report: DeletionReport,
 ): void {
-  // 1) rules.show.{parameters,tasks,stages}
+  // 1) rules.show.{parameters,tasks,stages} — drop entire rule if it references any deleted entity
   if (Array.isArray(param.rules)) {
+    const keptRules: any[] = [];
     for (const rule of param.rules) {
       const show = (rule as any).show;
-      if (!show) continue;
-      (['parameters', 'tasks', 'stages'] as const).forEach((field) => {
-        if (!Array.isArray(show[field])) return;
-        const before = show[field].length;
-        show[field] = show[field].filter((id: string) => {
-          if (field === 'parameters') return !del.parameters.has(String(id));
-          if (field === 'tasks') return !del.tasks.has(String(id));
-          return !del.stages.has(String(id));
+      const referencesDeleted =
+        show &&
+        ((Array.isArray(show.parameters) && show.parameters.some((id: string) => del.parameters.has(String(id)))) ||
+         (Array.isArray(show.tasks) && show.tasks.some((id: string) => del.tasks.has(String(id)))) ||
+         (Array.isArray(show.stages) && show.stages.some((id: string) => del.stages.has(String(id)))));
+      if (referencesDeleted) {
+        report.counts.rulesRemoved += 1;
+        report.counts.references += 1;
+        report.cleaned.push({
+          kind: 'rule',
+          location: loc,
+          detail: `Removed branching rule referencing a deleted parameter`,
         });
-        const removed = before - show[field].length;
-        if (removed > 0) {
-          report.counts.rules += removed;
-          report.counts.references += removed;
-          report.cleaned.push({
-            kind: 'rule',
-            location: loc,
-            detail: `Removed ${removed} reference(s) from a visibility rule`,
-          });
-        }
-      });
+      } else {
+        keptRules.push(rule);
+      }
     }
+    param.rules = keptRules;
   }
 
   // 2) autoInitialize.parameterId
@@ -280,26 +278,25 @@ function cleanParameter(
     report.cleaned.push({ kind: 'autoInitialize', location: loc, detail: 'Cleared auto-initialize source' });
   }
 
-  // 3) data.propertyFilters / data.propertyValidations  (remove referencing fields)
+  // 3) data.propertyFilters / data.propertyValidations — drop entire block if any field references a deleted param
   const data: any = param.data;
   if (data && typeof data === 'object' && !Array.isArray(data)) {
     (['propertyFilters', 'propertyValidations'] as const).forEach((blockKey) => {
       const block = data[blockKey];
       if (block && Array.isArray(block.fields)) {
-        const before = block.fields.length;
-        block.fields = block.fields.filter(
-          (f: any) => !del.parameters.has(String(f?.referencedParameterId)),
+        const hasDeletedRef = block.fields.some(
+          (f: any) => referencesDeletedParam(f, del.parameters),
         );
-        const removed = before - block.fields.length;
-        if (removed > 0) {
-          report.counts[blockKey === 'propertyFilters' ? 'filters' : 'validations'] += removed;
-          report.counts.references += removed;
+        if (hasDeletedRef) {
+          const count = block.fields.length;
+          data[blockKey] = null;
+          report.counts[blockKey === 'propertyFilters' ? 'filters' : 'validations'] += count;
+          report.counts.references += count;
           report.cleaned.push({
             kind: blockKey === 'propertyFilters' ? 'filter' : 'validation',
             location: loc,
-            detail: `Removed ${removed} ${blockKey === 'propertyFilters' ? 'filter' : 'validation'} condition(s)`,
+            detail: `Removed entire ${blockKey === 'propertyFilters' ? 'filter' : 'validation'} block (${count} condition(s))`,
           });
-          if (block.fields.length === 0) data[blockKey] = null;
         }
       }
     });
@@ -347,10 +344,7 @@ function referencesDeletedParam(node: any, deletedParams: Set<string>): boolean 
   for (const key of Object.keys(node)) {
     const val = node[key];
     const lk = key.toLowerCase();
-    if (
-      (lk === 'parameterid' || lk === 'referencedparameterid') &&
-      deletedParams.has(String(val))
-    ) {
+    if (lk.includes('parameterid') && (typeof val === 'string' || typeof val === 'number') && deletedParams.has(String(val))) {
       return true;
     }
     if (val && typeof val === 'object' && referencesDeletedParam(val, deletedParams)) return true;
@@ -378,7 +372,7 @@ export function deleteEntities(
       automationsRemoved: 0,
       filters: 0,
       validations: 0,
-      rules: 0,
+      rulesRemoved: 0,
       autoInit: 0,
       calculations: 0,
       mentions: 0,

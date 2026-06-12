@@ -1,7 +1,6 @@
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect } from 'react';
 import { AlertTriangle, Trash2, Link2Off } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -18,13 +17,9 @@ interface Props {
 }
 
 export default function Step3DeleteReview({ originalConfig, selectedEntities, onComputed }: Props) {
-  const [removeEmptiedAutomations, setRemoveEmptiedAutomations] = useState(
-    DEFAULT_DELETION_OPTIONS.removeEmptiedAutomations,
-  );
-
   const { modifiedConfig, report } = useMemo(
-    () => deleteEntities(originalConfig, selectedEntities, { removeEmptiedAutomations }),
-    [originalConfig, selectedEntities, removeEmptiedAutomations],
+    () => deleteEntities(originalConfig, selectedEntities, DEFAULT_DELETION_OPTIONS),
+    [originalConfig, selectedEntities],
   );
 
   // Push the computed result up to context whenever it changes.
@@ -88,7 +83,7 @@ export default function Step3DeleteReview({ originalConfig, selectedEntities, on
               ['Automations removed', c.automationsRemoved],
               ['Filters', c.filters],
               ['Validations', c.validations],
-              ['Rules', c.rules],
+              ['Branching rules removed', c.rulesRemoved],
               ['Auto-initialize', c.autoInit],
               ['Calculations', c.calculations],
               ['Task references', c.taskRefs],
@@ -126,30 +121,6 @@ export default function Step3DeleteReview({ originalConfig, selectedEntities, on
         </CardContent>
       </Card>
 
-      {/* Options */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Cleanup Options</CardTitle>
-          <CardDescription>Control how affected automations are handled.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-start space-x-3">
-            <Checkbox
-              id="removeEmptiedAutomations"
-              checked={removeEmptiedAutomations}
-              onCheckedChange={(v) => setRemoveEmptiedAutomations(v as boolean)}
-            />
-            <div className="flex-1 space-y-1">
-              <Label htmlFor="removeEmptiedAutomations" className="cursor-pointer">
-                Remove automations that end up with no parameters
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                If unchecked, such automations are kept but unlinked from the deleted parameter(s).
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
